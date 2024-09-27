@@ -1,0 +1,29 @@
+{% extends "base/base.html" %}
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            {%for item in mascotas%}
+            <div class="col-6 col-sm-4 col-md-3">
+                <div class="card text-center border-info" >
+                    <div class="card">
+                        <img class="card-img-top" src={{item.foto.url}}>
+                        <div class="card-body ">
+                            <h5 class="card-tittle">{{item.raza}}</h5>
+                            <p class="card-text">{{item.descripcion}}</p>
+                            {% if item.comprado %}
+                            <h5 class="card-tittle">{{item.comprado}}</h5>
+                            {% endif %}
+                            <a href="{% url 'mascota' item.id %}" class="btn btn-primary">Comprame</div>a>
+                        </div>
+                    </div>
+                </div> 
+            </div>  
+            {%endfor%} 
+        </div>    
+    </div>
+
+   
+    
+
+{% endblock %}

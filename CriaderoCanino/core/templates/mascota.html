@@ -1,0 +1,37 @@
+{% extends "base/base.html" %}
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-6 col-sm-4 col-md-3">
+            <div class="card text-center border-info" >
+                <div class="card">
+                    <img class="card-img-top" src={{mascota.foto.url}}>
+                    <div class="card-body ">
+                        <h5 class="card-tittle">{{mascota}}</h5>
+                        <p class="card-text">{{mascota.descripcion}}</p>
+                    </div>
+                </div>
+            </div> 
+        </div>  
+    </div>    
+</div>
+
+{% if no_asesor %}
+  <form action="{% url 'comprar' mascota.id %}" method="post">
+     {%csrf_token%}
+     <select name="asesor">
+         {%for asesor i no asesor %}
+         <option value="{{asesor.codigo}}">{{asesor}}<option>
+         {% endfor %}
+     <select>
+     <input type="submit" value="Comprame">
+  </form>
+
+{% else %}
+ <div>Todos los asesores ya compraron alguna mascota !!</div>
+
+ {% endif %}
+
+    
+{% endblock  %}
