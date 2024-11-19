@@ -12,9 +12,13 @@
   </head>
   <body>
 
+  
+
     <nav class="navbar" style="background-color: #e3f2fd;">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Criadero</a>
+        <a href="{% url 'signup' %}" class="btn btn-primary">Registrarse</a>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -36,6 +40,12 @@
         </div>
       </div>
     </nav>
+
+    
+
+    <h1>signup</h1>
+
+    
 
    
     {% block content %}

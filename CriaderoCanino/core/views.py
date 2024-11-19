@@ -6,9 +6,34 @@ from django.http import Http404
 from django.urls import reverse
 from .form import MascotaForm
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm 
+from django.http import HttpResponse
 
 
-# Create your views here.
+
+def signup(request):
+
+    if request.method == 'GET':
+    
+        return render(request,'signup.html', {
+            'form': UserCreationForm  
+        })
+    
+    else:
+
+        if request.POST['password1'] == request.POST['password2']:
+            try: 
+                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+                user.save()
+                return HttpResponse('Usuario creado')
+            except:
+                return HttpResponse('Nombre de usuario ya existe')
+        return HttpResponse('La contra no coincide')
+    
+    
+    
+
+
 
 def grabar_mascotas(request):
     context = {}
