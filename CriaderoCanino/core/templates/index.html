@@ -1,5 +1,10 @@
 {% extends "base/base.html" %}
 {% block content %}
+<p>Bienvenidos a nuestro criadero de caninos, aqui podras adoptar a los caninos que tenemos disponobles para ti.</p>
+
+
+
+  
 
     <div class="container">
         <div class="row">
@@ -14,7 +19,7 @@
                             {% if item.comprado %}
                             <h5 class="card-tittle">{{item.comprado}}</h5>
                             {% endif %}
-                            <a href="{% url 'mascota' item.id %}" class="btn btn-primary">Comprame</div>a>
+                            <a href="{% url 'mascota' item.id %}" class="btn btn-primary">Adoptame</div>a>
                         </div>
                     </div>
                 </div> 
@@ -23,7 +28,9 @@
         </div>    
     </div>
 
-   
+    {% endblock %}
+
+       
     
 
-{% endblock %}
+

@@ -6,38 +6,54 @@ from django.http import Http404
 from django.urls import reverse
 from .form import MascotaForm
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm 
+from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
-
+from django.contrib.auth import login,logout
+from django.db import IntegrityError
 
 
 def signup(request):
 
     if request.method == 'GET':
-    
-        return render(request,'signup.html', {
-            'form': UserCreationForm  
+
+        return render(request, 'signup.html', {
+            'form': UserCreationForm
         })
-    
+
     else:
 
         if request.POST['password1'] == request.POST['password2']:
-            try: 
-                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+            try:
+                user = User.objects.create_user(
+                    username=request.POST['username'], password=request.POST['password1'])
                 user.save()
-                return HttpResponse('Usuario creado')
-            except:
-                return HttpResponse('Nombre de usuario ya existe')
-        return HttpResponse('La contra no coincide')
-    
-    
-    
+                login(request,user)
+                return redirect('tasks')
+            except IntegrityError:
+                return render(request, 'signup.html',{
+                    'form': UserCreationForm,
+                    "error":'usuario ya existe'
+                })
+            
+               
+         
 
+        return render(request, 'signup.html', {
+            'form': UserCreationForm,
+            "error": 'La contra no coincide'
+        })
+        
+def tasks(request):
+    return render(request, 'tasks.html')    
+
+
+
+        
 
 
 def grabar_mascotas(request):
     context = {}
-    template_name ="grabar_mascotas.html"
+    template_name = "grabar_mascotas.html"
     if request.method == "POST":
         form = MascotaForm(request.POST)
         if form.is_valid():
@@ -46,47 +62,51 @@ def grabar_mascotas(request):
             ase = form.cleaned_data.get("asesor")
             des = form.cleaned_data.get("descripcion")
             obj = Mascota.objects.create(
-                raza = raz,
-                tamaño = tam,
-                asesor = ase,
-                descripcion = des
+                raza=raz,
+                tamaño=tam,
+                asesor=ase,
+                descripcion=des
             )
             obj.save()
 
     else:
         form = MascotaForm()
-    context ['form'] = form 
+    context['form'] = form
     return render(request, template_name, context)
 
 
-def listado_mascotas (request):
+def listado_mascotas(request):
     template_name = "Listado_mascotas.html"
     return render(request, template_name)
+
 
 def index(request):
     template_name = "index.html"
     mascotas = Mascota.objects.all()
-    context= {'mascotas': mascotas
-              }
+    context = {'mascotas': mascotas
+               }
     return render(request, template_name, context)
+
 
 def mascota(request, masctota_id):
     template_name = 'mascota.html'
-    try: 
-        mascota=Mascota.objects.get(pk=masctota_id)
+    try:
+        mascota = Mascota.objects.get(pk=masctota_id)
     except Mascota.DoesNotExist:
         raise Http404("Mascota no existe")
     context = {
-        "mascota" : mascota,
-        "no_asesor": Asesor.objects.exclude(mascota=mascota).all() #intentar incluir el asesor posible con get
+        "mascota": mascota,
+        # intentar incluir el asesor posible con get
+        "no_asesor": Asesor.objects.exclude(mascota=mascota).all()
 
     }
     return render(request, template_name, context)
 
-def comprar(request,mascota_id):
-    try: 
+
+def comprar(request, mascota_id):
+    try:
         template_name = 'index.html'
-        cliente_id=request.POST["cliente"]
+        cliente_id = request.POST["cliente"]
         cliente = Asesor.objects.get(pk=cliente_id)
         mascota = Mascota.objects.get(pk=mascota_id)
     except KeyError:
@@ -97,16 +117,17 @@ def comprar(request,mascota_id):
         print("El asesor no existe")
 
     cliente.mascota.add(mascota)
-    mascota.comprado=cliente.nombre
+    mascota.comprado = cliente.nombre
     mascota.save()
 
     return HttpResponseRedirect(reverse("mascota", args=(mascota_id,)))
-    
+
 
 def ListarUsuarios(request):
     users = User.objects.all()
     return render(request, 'listar_usuarios.html', {'usuarios':
-    users})
+                                                    users})
+
 
 def CrearUsuario(request):
     if request.method == 'POST':
@@ -116,12 +137,13 @@ def CrearUsuario(request):
         phone = request.POST['phone']
         is_boss = request.POST['is_boss']
         user = User(email=email, name=name, password=password,
-        phone=phone, is_boss=is_boss)
+                    phone=phone, is_boss=is_boss)
     if email.is_valid():
         user.save()
         return redirect('listar_usuarios')
     else:
         return render(request, 'crear_usuario.html')
+
 
 def EditarUsuario(request, email):
     user = User.objects.get(email=email)
@@ -136,10 +158,11 @@ def EditarUsuario(request, email):
         user.save()
     return redirect('listar_usuarios')
 
+
 def EliminarUsuario(request, email):
     user = User.objects.get(email=email)
     if request.method == 'POST':
         user.delete()
         return redirect('listar_usuarios')
     else:
-        return render(request, 'eliminar_usuario.html', {'usuario':user})
+        return render(request, 'eliminar_usuario.html', {'usuario': user})
