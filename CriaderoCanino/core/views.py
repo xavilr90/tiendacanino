@@ -8,8 +8,16 @@ from .form import MascotaForm
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
-from django.contrib.auth import login,logout
+from django.contrib.auth import login, logout
 from django.db import IntegrityError
+
+
+def index(request):
+    template_name = 'index.html'
+    mascotas = Mascota.objects.all()
+    context = {'mascotas': mascotas
+               }
+    return render(request, template_name, context)
 
 
 def signup(request):
@@ -27,28 +35,30 @@ def signup(request):
                 user = User.objects.create_user(
                     username=request.POST['username'], password=request.POST['password1'])
                 user.save()
-                login(request,user)
-                return redirect('tasks')
+                login(request, user)
+                return redirect('dashboard')
             except IntegrityError:
-                return render(request, 'signup.html',{
+                return render(request, 'signup.html', {
                     'form': UserCreationForm,
-                    "error":'usuario ya existe'
+                    "error": 'usuario ya existe'
                 })
-            
-               
-         
 
         return render(request, 'signup.html', {
             'form': UserCreationForm,
             "error": 'La contra no coincide'
         })
-        
-def tasks(request):
-    return render(request, 'tasks.html')    
 
 
+def signout(request):
+    logout(request)
+    return redirect('index')
 
-        
+
+def dashboard(request):
+    return render(request, 'dashboard.html')
+
+def signin(request):
+    return render(request, 'signin.html')
 
 
 def grabar_mascotas(request):
@@ -78,14 +88,6 @@ def grabar_mascotas(request):
 def listado_mascotas(request):
     template_name = "Listado_mascotas.html"
     return render(request, template_name)
-
-
-def index(request):
-    template_name = "index.html"
-    mascotas = Mascota.objects.all()
-    context = {'mascotas': mascotas
-               }
-    return render(request, template_name, context)
 
 
 def mascota(request, masctota_id):

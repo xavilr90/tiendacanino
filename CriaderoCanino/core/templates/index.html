@@ -2,13 +2,9 @@
 {% block content %}
 <p>Bienvenidos a nuestro criadero de caninos, aqui podras adoptar a los caninos que tenemos disponobles para ti.</p>
 
-
-
-  
-
     <div class="container">
         <div class="row">
-            {%for item in mascotas%}
+            {% for item in mascotas %}
             <div class="col-6 col-sm-4 col-md-3">
                 <div class="card text-center border-info" >
                     <div class="card">
@@ -24,7 +20,7 @@
                     </div>
                 </div> 
             </div>  
-            {%endfor%} 
+            {% endfor %} 
         </div>    
     </div>
 
