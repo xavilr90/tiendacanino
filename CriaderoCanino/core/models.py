@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -8,6 +9,7 @@ class Asesor(models.Model):
     telefono=models.CharField(max_length=10)
     correo=models.CharField(max_length=100)
     mascota=models.ManyToManyField("Mascota", blank = True, related_name = "Asesor")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="Asesor")
 
     def __str__(self):
         return self.nombre

@@ -4,11 +4,11 @@ from .users import *
 from .models import Mascota, Asesor
 from django.http import Http404
 from django.urls import reverse
-from .form import MascotaForm
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from .form import MascotaForm, UserRegistrationForm
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.http import HttpResponse
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 
 
@@ -21,68 +21,104 @@ def index(request):
 
 
 def signup(request):
-
     if request.method == 'GET':
+        form = UserRegistrationForm()
+        return render(request, 'signup.html', {'form': form})
 
-        return render(request, 'signup.html', {
-            'form': UserCreationForm
+    elif request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+
+            # Asignar grupo seleccionado
+            group = form.cleaned_data['group']
+            group.user_set.add(user)
+
+            # Iniciar sesión automáticamente después del registro (opcional)
+            login(request, user)
+            return redirect('dashboard')
+
+        return render(request, 'signup.html', {'form': form, 'error': 'Error al registrar el usuario.'})
+
+
+def signin(request):
+    if request.method == 'GET':
+        return render(request, 'signin.html', {
+            'form': AuthenticationForm
         })
-
     else:
+        user = authenticate(
+            request, username=request.POST['username'], password=request.POST
+            ['password'])
+        if user is None:
+            return render(request, 'signin.html', {
+                'form': AuthenticationForm,
+                'error': 'El Usuario o la Contraseña esta incorrecta'
+            })
+        else:
+            login(request, user)
 
-        if request.POST['password1'] == request.POST['password2']:
-            try:
-                user = User.objects.create_user(
-                    username=request.POST['username'], password=request.POST['password1'])
-                user.save()
-                login(request, user)
-                return redirect('dashboard')
-            except IntegrityError:
-                return render(request, 'signup.html', {
-                    'form': UserCreationForm,
-                    "error": 'usuario ya existe'
-                })
-
-        return render(request, 'signup.html', {
-            'form': UserCreationForm,
-            "error": 'La contra no coincide'
-        })
-
-
+            # Redirección basada en roles
+            if user.is_superuser:
+                return redirect('admin_dashboard')  # Vista o URL del administrador
+            elif user.groups.filter(name='Asesor de Tienda').exists():
+                return redirect('dashboard')  # Vista o URL del asesor
+            else:
+                return redirect('default_dashboard')  # Redirección genérica en caso de no pertenecer a ningún rol específico
+             
 def signout(request):
     logout(request)
     return redirect('index')
 
+def user_dashboard(request):
+    template_name = 'default_dashboard.html'
+    mascotas = Mascota.objects.all()
+    context = {'mascotas': mascotas
+               }
+    return render(request, template_name, context)
+
+def admin_dashboard(request):
+    return render(request, 'admin_dashboard.html')
 
 def dashboard(request):
-    return render(request, 'dashboard.html')
-
-def signin(request):
-    return render(request, 'signin.html')
-
+    return render(request, 'dashboard.html') # Retorna el dashborad del asesor
 
 def grabar_mascotas(request):
     context = {}
     template_name = "grabar_mascotas.html"
-    if request.method == "POST":
-        form = MascotaForm(request.POST)
-        if form.is_valid():
-            raz = form.cleaned_data.get("raza")
-            tam = form.cleaned_data.get("tamaño")
-            ase = form.cleaned_data.get("asesor")
-            des = form.cleaned_data.get("descripcion")
-            obj = Mascota.objects.create(
-                raza=raz,
-                tamaño=tam,
-                asesor=ase,
-                descripcion=des
-            )
-            obj.save()
+    
+    # Solo permitir agregar mascotas si el usuario está autenticado
+    if request.user.is_authenticated:
+        if request.method == "POST":
+            form = MascotaForm(request.POST, request.FILES)  # Incluye request.FILES para manejar imágenes
+            if form.is_valid():
+                raza = form.cleaned_data.get("raza")
+                tamaño = form.cleaned_data.get("tamaño")
+                descripcion = form.cleaned_data.get("descripcion")
+                
+                # Obtén el asesor relacionado con el usuario autenticado
+                asesor = request.user.asesor  # Relacionamos al asesor del usuario autenticado
 
+                # Crear una nueva instancia de la mascota
+                mascota = Mascota.objects.create(
+                    raza=raza,
+                    tamaño=tamaño,
+                    asesor=asesor,  # Relacionamos la mascota con el asesor
+                    descripcion=descripcion,
+                    foto=form.cleaned_data.get('foto')  # Si el formulario incluye un campo de foto
+                )
+                mascota.save()
+                return redirect('listar_mascotas')  # Redirigir a la lista de mascotas (cambia a la URL que uses)
+        
+        else:
+            form = MascotaForm()
+
+        context['form'] = form
+        return render(request, template_name, context)
     else:
-        form = MascotaForm()
-    context['form'] = form
-    return render(request, template_name, context)
+        return redirect('signin')
 
 
 def listado_mascotas(request):

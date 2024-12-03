@@ -2,4 +2,12 @@
 
 <h1>Inicia sesion</h1>
 
+{{error}}
+
+<form action="/signin/" method="POST">
+  {% csrf_token %} {{ form.as_p }}
+
+  <button>Iniciar sesion</button>
+</form>
+
 {% endblock %}
